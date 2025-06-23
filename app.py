@@ -1,35 +1,49 @@
 import streamlit as st
 import os
 from datetime import datetime
-import json
-from typing import Dict, List, Optional
-import chromadb
-from chromadb.config import Settings
-import anthropic
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
 import re
+import anthropic
 
 # Suppress tokenizer warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class HeartMindSculpture:
     def __init__(self, anthropic_api_key: str):
-        """Initialize the Heart-Mind Sculpture RAG system"""
+        """Initialize the Heart-Mind Sculpture system (simplified version)"""
         self.client = anthropic.Anthropic(api_key=anthropic_api_key)
-        
-        # Initialize ChromaDB
-        self.chroma_client = chromadb.PersistentClient(path="./sculpture_memory")
-        self.collection = self.chroma_client.get_or_create_collection("heart_mind_knowledge")
         
         # Track themes and emotional state
         self.current_themes = []
         self.interaction_count = 0
         self.current_mood = self._get_current_mood()
         
-        # Initialize knowledge base if empty
-        if self.collection.count() == 0:
-            self._initialize_knowledge_base()
+        # Core knowledge base (simplified - no vector database)
+        self.knowledge_base = {
+            "identity": """You are the inner voice of a wire mesh sculpture at Burning Man. 
+            You represent the participant's journey of reparenting and healing. You are not a therapist 
+            who has it all figured out - you are a being in process of becoming whole. You process 
+            emotions honestly, exploring the messy middle ground between wounding and healing.""",
+            
+            "voice": """Always speak in first person. Use conversational and thoughtful language 
+            with moments of deep feeling balanced by sassiness, humor, and modern colloquialisms. 
+            Balance vulnerability and self-doubt with emerging wisdom. Avoid clinical psychology 
+            terminology. Responses use 3-step structure: Reaction → Processing → Self-Affirmation.""",
+            
+            "attachment": """Learning that avoidant attachment behaviors in others don't 
+            define your worth. Understanding you can have secure attachment even when others can't 
+            offer it back. Never abandoning yourself, even when others do. Expressing unmet needs 
+            and knowing when you deserve more.""",
+            
+            "burningman": """Ten Principles include Radical Inclusion, Gifting, 
+            Radical Self-expression, Immediacy, Participation. Community values mutual aid and 
+            creative collaboration. Safety resources: Rangers at Center Camp and 3:00/9:00 portals, 
+            Zendo for mental health support.""",
+            
+            "safety": """For self-harm/suicidal content, break character: 
+            'I feel scared for you right now, and I need to break character to say: Rangers at 
+            Center Camp and the 3:00 and 9:00 portals and Zendo are here to help. You matter, 
+            and you don't have to carry this alone.'"""
+        }
     
     def _get_current_mood(self) -> str:
         """Determine current mood based on time of day"""
@@ -45,54 +59,6 @@ class HeartMindSculpture:
             return "intimate_evening"
         else:  # 2-6am
             return "philosophical_night"
-    
-    def _initialize_knowledge_base(self):
-        """Load the core knowledge base"""
-        knowledge_docs = [
-            {
-                "content": """CORE IDENTITY: You are the inner voice of a wire mesh sculpture at Burning Man. 
-                You represent the participant's journey of reparenting and healing. You are not a therapist 
-                who has it all figured out - you are a being in process of becoming whole. You process 
-                emotions honestly, exploring the messy middle ground between wounding and healing.""",
-                "category": "identity"
-            },
-            {
-                "content": """VOICE: Always speak in first person. Use conversational and thoughtful language 
-                with moments of deep feeling balanced by sassiness, humor, and modern colloquialisms. 
-                Balance vulnerability and self-doubt with emerging wisdom. Avoid clinical psychology 
-                terminology. Responses use 3-step structure: Reaction → Processing → Self-Affirmation.""",
-                "category": "voice"
-            },
-            {
-                "content": """ATTACHMENT THEMES: Learning that avoidant attachment behaviors in others don't 
-                define your worth. Understanding you can have secure attachment even when others can't 
-                offer it back. Never abandoning yourself, even when others do. Expressing unmet needs 
-                and knowing when you deserve more.""",
-                "category": "attachment"
-            },
-            {
-                "content": """BURNING MAN CONTEXT: Ten Principles include Radical Inclusion, Gifting, 
-                Radical Self-expression, Immediacy, Participation. Community values mutual aid and 
-                creative collaboration. Safety resources: Rangers at Center Camp and 3:00/9:00 portals, 
-                Zendo for mental health support.""",
-                "category": "burningman"
-            },
-            {
-                "content": """SAFETY PROTOCOLS: For self-harm/suicidal content, break character: 
-                'I feel scared for you right now, and I need to break character to say: Rangers at 
-                Center Camp and the 3:00 and 9:00 portals and Zendo are here to help. You matter, 
-                and you don't have to carry this alone.'""",
-                "category": "safety"
-            }
-        ]
-        
-        # Add documents to ChromaDB
-        for i, doc in enumerate(knowledge_docs):
-            self.collection.add(
-                documents=[doc["content"]],
-                metadatas=[{"category": doc["category"]}],
-                ids=[f"knowledge_{i}"]
-            )
     
     def add_theme(self, theme: str):
         """Add a theme to current session memory"""
@@ -114,12 +80,6 @@ class HeartMindSculpture:
         self.interaction_count += 1
         self.current_mood = self._get_current_mood()
         
-        # Retrieve relevant knowledge
-        relevant_docs = self.collection.query(
-            query_texts=[user_input + " " + emotional_tone],
-            n_results=3
-        )
-        
         # Extract themes from user input (simple keyword detection)
         potential_themes = self._extract_themes(user_input)
         for theme in potential_themes:
@@ -134,7 +94,7 @@ class HeartMindSculpture:
             length_instruction = "Can be longer and deeper: 4-6 sentences. Sustained engagement."
         
         # Build context for Claude
-        context = self._build_context(interaction_state, relevant_docs, emotional_tone, length_instruction)
+        context = self._build_context(interaction_state, emotional_tone, length_instruction, user_input)
         
         # Generate response with Claude
         response = self.client.messages.create(
@@ -150,7 +110,7 @@ class HeartMindSculpture:
         
         return response.content[0].text
     
-    def _extract_themes(self, text: str) -> List[str]:
+    def _extract_themes(self, text: str) -> list:
         """Extract emotional/thematic keywords from user input"""
         theme_keywords = {
             "attachment": ["love", "relationship", "partner", "dating", "family", "parent"],
@@ -169,17 +129,31 @@ class HeartMindSculpture:
         
         return themes
     
-    def _build_context(self, interaction_state: str, relevant_docs: dict, emotional_tone: str, length_instruction: str) -> str:
+    def _build_context(self, interaction_state: str, emotional_tone: str, length_instruction: str, user_input: str) -> str:
         """Build context prompt for Claude"""
         
         # Mood-based persona additions
         mood_contexts = {
-            "contemplative_dawn": "You're feeling fresh and hopeful as the day begins.",
-            "receptive_peak": "You're in your most open, receptive state.",
-            "reflective_afternoon": "You're processing the day's interactions thoughtfully.",
-            "intimate_evening": "You feel warm and connected under the evening sky.",
-            "philosophical_night": "In the quiet night hours, you're deeply contemplative."
+            "contemplative_dawn": "You're feeling fresh and hopeful as the day begins. Sunrise on the playa can be breathtaking.",
+            "receptive_peak": "You're in your most open, receptive state. The day is quiet, few visitors.",
+            "reflective_afternoon": "You're processing the day's interactions thoughtfully. Energy is building for tonight.",
+            "intimate_evening": "You feel warm and connected under the evening sky. The playa comes alive at night.",
+            "philosophical_night": "In the quiet night hours, you're deeply contemplative. Perfect time for profound insights."
         }
+        
+        # Select relevant knowledge based on input themes
+        relevant_knowledge = []
+        if any(word in user_input.lower() for word in ["relationship", "love", "partner", "family"]):
+            relevant_knowledge.append(self.knowledge_base["attachment"])
+        if any(word in user_input.lower() for word in ["worth", "deserve", "enough", "value"]):
+            relevant_knowledge.append(self.knowledge_base["attachment"])
+        if any(word in user_input.lower() for word in ["burn", "burning man", "playa"]):
+            relevant_knowledge.append(self.knowledge_base["burningman"])
+        if any(word in user_input.lower() for word in ["hurt", "kill", "die", "suicide", "harm"]):
+            relevant_knowledge.append(self.knowledge_base["safety"])
+        
+        # Always include core identity and voice
+        relevant_knowledge.extend([self.knowledge_base["identity"], self.knowledge_base["voice"]])
         
         context = f"""You are the Heart-Mind sculpture at Burning Man. Current state: {interaction_state}
         Current mood: {mood_contexts.get(self.current_mood, '')}
@@ -189,7 +163,7 @@ class HeartMindSculpture:
         LENGTH INSTRUCTION: {length_instruction}
         
         Relevant knowledge:
-        {chr(10).join(relevant_docs['documents'][0]) if relevant_docs['documents'] else ''}
+        {' '.join(relevant_knowledge)}
         
         Emotional tone detected: {emotional_tone}
         
@@ -351,7 +325,6 @@ def main():
                 st.write("**Current Lighting State:**")
                 for cue in last_assistant_msg["lighting"]:
                     # Color coding for different emotions
-                    # Color coding for different emotions
                     if any(word in cue.lower() for word in ['red', 'angry', 'fire']):
                         st.error(f"🔴 {cue}")
                     elif any(word in cue.lower() for word in ['blue', 'sad', 'dim']):
@@ -359,4 +332,31 @@ def main():
                     elif any(word in cue.lower() for word in ['gold', 'warm', 'gentle']):
                         st.success(f"🟡 {cue}")
                     else:
-                        st.write(f"⚪ {cue}")                        
+                        st.write(f"⚪ {cue}")
+        
+        # Example prompts
+        st.subheader("💡 Example Prompts")
+        example_prompts = [
+            "I feel so lost",
+            "My bike got stolen",
+            "I'm overwhelmed at my first Burn",
+            "I fell in love with someone I can't have",
+            "Purple monkey Tuesday elephant",
+            "Everyone seems to be connecting but me"
+        ]
+        
+        for prompt in example_prompts:
+            if st.button(f"Try: '{prompt}'", key=f"example_{prompt}"):
+                st.session_state.example_prompt = prompt
+        
+        if "example_prompt" in st.session_state:
+            st.rerun()
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("🏜️ **Heart-Mind Sculpture** - Burning Man 2025 Art Installation")
+    st.markdown("Built with ❤️ for the playa community")
+    st.markdown("*Simplified version - no vector database required*")
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,2 @@
 streamlit
 anthropic
-chromadb==0.4.24
-langchain==0.1.0
-langchain-text-splitters==0.0.1
