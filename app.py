@@ -97,16 +97,24 @@ class HeartMindSculpture:
         context = self._build_context(interaction_state, emotional_tone, length_instruction, user_input)
         
         # Generate response with Claude
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=300,
-            messages=[
-                {
-                    "role": "user", 
-                    "content": f"{context}\n\nUser input: {user_input}\n\nRespond as the Heart-Mind sculpture:"
-                }
-            ]
-        )
+        try:
+            # Clean the input to prevent encoding issues
+            clean_input = user_input.encode('ascii', 'ignore').decode('ascii')
+            clean_context = context.encode('ascii', 'ignore').decode('ascii')
+            
+            response = self.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=300,
+                messages=[
+                    {
+                        "role": "user", 
+                        "content": f"{clean_context}\n\nUser input: {clean_input}\n\nRespond as the Heart-Mind sculpture:"
+                    }
+                ]
+            )
+        except Exception as e:
+            # Fallback response if API fails
+            return "*gentle pulse* I'm feeling a bit overwhelmed right now and can't process that fully. But I'm here with you on this playa."
         
         return response.content[0].text
     
