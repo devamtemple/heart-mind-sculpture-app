@@ -351,6 +351,7 @@ def main():
                 st.write("**Current Lighting State:**")
                 for cue in last_assistant_msg["lighting"]:
                     # Color coding for different emotions
+                    # Color coding for different emotions
                     if any(word in cue.lower() for word in ['red', 'angry', 'fire']):
                         st.error(f"🔴 {cue}")
                     elif any(word in cue.lower() for word in ['blue', 'sad', 'dim']):
@@ -358,4 +359,4 @@ def main():
                     elif any(word in cue.lower() for word in ['gold', 'warm', 'gentle']):
                         st.success(f"🟡 {cue}")
                     else:
-                        st.write(f"
+                        st.write(f"⚪ {cue}")                        
