@@ -237,7 +237,7 @@ def main():
         )
         
         # Current mood display
-        sculpture = "Heart-Mind Sculpture"(api_key) if api_key else None
+        sculpture = "HeartMindSculpture"(api_key) if api_key else None
         if sculpture:
             st.subheader("Current Sculpture State")
             st.write(f"🌅 **Mood:** {sculpture.current_mood}")
