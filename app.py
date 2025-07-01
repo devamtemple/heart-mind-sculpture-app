@@ -198,13 +198,13 @@ def clean_response_text(text):
 # Streamlit App
 def main():
     st.set_page_config(
-        page_title="Heart-Mind Sculpture",
+        page_title="Out the Other",
         page_icon="🎭",
         layout="wide"
     )
     
     # Header
-    st.title("🎭 Heart-Mind Sculpture")
+    st.title("🎭 Out the Other")
     st.subheader("Interactive Testing Interface for Burning Man 2025")
     
     # Sidebar for configuration
@@ -233,7 +233,7 @@ def main():
         )
         
         # Current mood display
-        sculpture = HeartMindSculpture(api_key) if api_key else None
+        sculpture = Out the Other(api_key) if api_key else None
         if sculpture:
             st.subheader("Current Sculpture State")
             st.write(f"🌅 **Mood:** {sculpture.current_mood}")
@@ -354,7 +354,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("🏜️ **Heart-Mind Sculpture** - Burning Man 2025 Art Installation")
+    st.markdown("🏜️ *Out the Other** - Burning Man 2025 Art Installation")
     st.markdown("Built with ❤️ for the playa community")
     st.markdown("*Simplified version - no vector database required*")
 
