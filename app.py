@@ -211,12 +211,16 @@ def main():
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # API Key input
+        # Try to get API key from secrets, fall back to user input
+        api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
+    
+    if not api_key:
         api_key = st.text_input("Anthropic API Key", type="password", help="Enter your Claude API key")
-        
         if not api_key:
             st.warning("Please enter your Anthropic API key to begin")
             st.stop()
+    else:
+        st.success("✅ API key loaded from secure storage")
         
         # Interaction parameters
         st.subheader("Interaction Settings")
