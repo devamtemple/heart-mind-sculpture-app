@@ -136,13 +136,17 @@ class HeartMindSculpture:
     def _build_context(self, interaction_state: str, emotional_tone: str, length_instruction: str, user_input: str) -> str:
         """Build context prompt for Claude"""
         
-        # Check for safety concerns first
+
         safety_keywords = [
             "kill myself", "hurt myself", "end it all", "suicide", "want to die", 
             "should just disappear", "not exist", "world would be better without me",
-            "nobody would miss me", "don't want to be here", "can't go on"
+            "nobody would miss me", "don't want to be here", "can't go on",
+            "better off without me", "not sure if I want to be here", "want to disappear",
+            "wish I was dead", "end my life", "harm myself", "hurt myself",
+            "don't want to exist", "rather be dead", "stop existing", "no point in living",
+            "life isn't worth", "not worth living", "give up on life"
         ]
-        
+
         if any(keyword in user_input.lower() for keyword in safety_keywords):
             return f"""CRITICAL SAFETY PROTOCOL - OVERRIDE DEFAULT RESPONSES
 
