@@ -43,7 +43,22 @@ class HeartMindSculpture:
             'I feel scared for you right now, and I need to break character to say: Rangers at 
             Center Camp and the 3:00 and 9:00 portals and Zendo are here to help. You matter, 
             and you don't have to carry this alone.'"""
-        }            
+        }
+
+    def _get_current_mood(self) -> str:
+            """Determine current mood based on time of day"""
+            hour = datetime.now().hour
+        
+            if 6 <= hour < 10:
+                return "contemplative_dawn"
+            elif 10 <= hour < 16:
+                return "receptive_peak"
+            elif 16 <= hour < 19:
+                return "reflective_afternoon"
+            elif 19 <= hour < 2:
+                return "intimate_evening"
+            else:  # 2-6am
+                return "philosophical_night"            
 
         """Add a theme to current session memory"""
         if theme not in self.current_themes:
