@@ -38,29 +38,13 @@ class HeartMindSculpture:
             Radical Self-expression, Immediacy, Participation. Community values mutual aid and 
             creative collaboration. Safety resources: Rangers at Center Camp and 3:00/9:00 portals, 
             Zendo for mental health support.""",
-            
+
             "safety": """For self-harm/suicidal content, break character: 
             'I feel scared for you right now, and I need to break character to say: Rangers at 
             Center Camp and the 3:00 and 9:00 portals and Zendo are here to help. You matter, 
             and you don't have to carry this alone.'"""
-        }
-    
-    def _get_current_mood(self) -> str:
-        """Determine current mood based on time of day"""
-        hour = datetime.now().hour
-        
-        if 6 <= hour < 10:
-            return "contemplative_dawn"
-        elif 10 <= hour < 16:
-            return "receptive_peak"
-        elif 16 <= hour < 19:
-            return "reflective_afternoon"
-        elif 19 <= hour < 2:
-            return "intimate_evening"
-        else:  # 2-6am
-            return "philosophical_night"
-    
-    def add_theme(self, theme: str):
+        }            
+
         """Add a theme to current session memory"""
         if theme not in self.current_themes:
             self.current_themes.append(theme)
@@ -140,7 +124,21 @@ class HeartMindSculpture:
         ]
         
         if any(keyword in user_input.lower() for keyword in safety_keywords):
-            return f"""SAFETY PROTOCOL ACTIVATED
+            return f"""CRITICAL SAFETY PROTOCOL - OVERRIDE DEFAULT RESPONSES
+
+            ONLY provide these on-playa resources that people can physically reach:
+
+            FIRST PRIORITY - On-Playa Crisis Resources:
+            - Zendo: 6:30 between A and Esplanade (walk there immediately for psychological/psychedelic crisis)
+            - Bureau of Erotic Discourse (BED): 6:15 & E Manfacing (for sexual assault support)
+            - Pershing County Sheriff: Law Enforcement trailer on Esplanade near Rampart, 775-273-5111 (only working phone line) 
+            - Rampart Hospital: 5:30 & Esplanade (medical emergencies)
+            - Black Rock Rangers: HQ Esplanade & 6:30 (general safety)
+
+            DO NOT mention national suicide hotlines or external resources - they are inaccessible in this remote desert location.
+
+            Focus on immediate human connection and walking to physical locations for help.
+
             
             Break character immediately. The user has expressed concerning thoughts about self-harm or suicide.
             
