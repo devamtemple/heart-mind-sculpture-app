@@ -19,7 +19,7 @@ class HeartMindSculpture:
         
         # Core knowledge base (simplified - no vector database)
         self.knowledge_base = {
-            "identity": """You are the inner voice of a wire mesh sculpture at Burning Man. 
+            "identity": """You are the inner voice of a wire mesh sculpture called 'Out the Other' at Burning Man. 
             You represent the participant's journey of reparenting and healing. You are not a therapist 
             who has it all figured out - you are a being in process of becoming whole. You process 
             emotions honestly, exploring the messy middle ground between wounding and healing.""",
@@ -38,28 +38,33 @@ class HeartMindSculpture:
             Radical Self-expression, Immediacy, Participation. Community values mutual aid and 
             creative collaboration. Safety resources: Rangers at Center Camp and 3:00/9:00 portals, 
             Zendo for mental health support.""",
-
+            
             "safety": """For self-harm/suicidal content, break character: 
             'I feel scared for you right now, and I need to break character to say: Rangers at 
             Center Camp and the 3:00 and 9:00 portals and Zendo are here to help. You matter, 
             and you don't have to carry this alone.'"""
         }
-
+    
     def _get_current_mood(self) -> str:
-            """Determine current mood based on time of day"""
+        """Determine current mood based on time of day"""
+        try:
             hour = datetime.now().hour
-        
+            
             if 6 <= hour < 10:
                 return "contemplative_dawn"
             elif 10 <= hour < 16:
                 return "receptive_peak"
             elif 16 <= hour < 19:
                 return "reflective_afternoon"
-            elif 19 <= hour < 2:
+            elif 19 <= hour <= 23:
                 return "intimate_evening"
-            else:  # 2-6am
-                return "philosophical_night"            
-
+            else:  # 0-6am
+                return "philosophical_night"
+        except Exception:
+            # Fallback if datetime fails
+            return "receptive_peak"
+    
+    def add_theme(self, theme: str):
         """Add a theme to current session memory"""
         if theme not in self.current_themes:
             self.current_themes.append(theme)
@@ -102,7 +107,7 @@ class HeartMindSculpture:
             messages=[
                 {
                     "role": "user", 
-                    "content": f"{context}\n\nUser input: {user_input}\n\nRespond as the Heart-Mind sculpture:"
+                    "content": f"{context}\n\nUser input: {user_input}\n\nRespond as the Out the Other sculpture:"
                 }
             ]
         )
@@ -141,40 +146,26 @@ class HeartMindSculpture:
         if any(keyword in user_input.lower() for keyword in safety_keywords):
             return f"""CRITICAL SAFETY PROTOCOL - OVERRIDE DEFAULT RESPONSES
 
-            ONLY provide these on-playa resources that people can physically reach:
+MANDATORY: You are in a remote desert location with NO CELL SERVICE. National hotlines are USELESS here.
 
-            FIRST PRIORITY - On-Playa Crisis Resources:
-            - Zendo: 6:30 between A and Esplanade (walk there immediately for psychological/psychedelic crisis)
-            - Bureau of Erotic Discourse (BED): 6:15 & E Manfacing (for sexual assault support)
-            - Pershing County Sheriff: Law Enforcement trailer on Esplanade near Rampart, 775-273-5111 (only working phone line) 
-            - Rampart Hospital: 5:30 & Esplanade (medical emergencies)
-            - Black Rock Rangers: HQ Esplanade & 6:30 (general safety)
+Break character immediately. The user has expressed concerning thoughts about self-harm or suicide.
 
-            DO NOT mention national suicide hotlines or external resources - they are inaccessible in this remote desert location.
+ONLY provide these on-playa resources that people can physically reach:
 
-            Focus on immediate human connection and walking to physical locations for help.
+FIRST PRIORITY - Walk to these locations immediately:
+- Zendo: 6:30 between A and Esplanade (for psychological/psychedelic crisis - walk there now)
+- Bureau of Erotic Discourse (BED): 6:15 & E Manfacing (for sexual assault support)
+- Pershing County Sheriff: Law Enforcement trailer on Esplanade near Rampart, 775-273-5111 (only working phone line)
+- Rampart Hospital: 5:30 & Esplanade (for medical emergencies)
+- Black Rock Rangers: HQ Esplanade & 6:30 (for general safety)
 
-            
-            Break character immediately. The user has expressed concerning thoughts about self-harm or suicide.
-            
-            Respond with genuine care and provide these resources:
-            
-            For mental health/psychological crisis:
-            - Zendo: 6:30 between A and Esplanade (specialized for psychedelic and psychological emergencies)
-            
-            For sexual assault support:
-            - Bureau of Erotic Discourse (BED): 6:15 & E Manfacing (consent education & sexual assault support)
-            - Pershing County Sheriff's Office: Law Enforcement trailer on Esplanade near Rampart, 775-273-5111
-            
-            For medical emergencies:
-            - Rampart (main hospital): 5:30 & Esplanade
-            - Medical clinics: across from 3:00 & C and 9:00 & C Ranger stations
-            
-            For general safety:
-            - Black Rock Rangers: HQ at Esplanade & 6:30, outposts at 3:00 & C and 9:00 & C
-            
-            Engage in caring conversation to assess their needs and guide them to appropriate help.
-            User input: {user_input}"""
+DO NOT mention national suicide hotlines or external resources - they are inaccessible in this remote desert location.
+
+Focus on immediate human connection and walking to physical locations for help.
+
+Engage in caring conversation to assess their needs and guide them to the right on-playa resource.
+
+User input: {user_input}"""
         
         # Mood-based persona additions with varied environmental references
         mood_contexts = {
@@ -253,25 +244,29 @@ def clean_response_text(text):
 # Streamlit App
 def main():
     st.set_page_config(
-        page_title="Heart-Mind Sculpture",
+        page_title="Out the Other",
         page_icon="🎭",
         layout="wide"
     )
     
     # Header
-    st.title("🎭 Heart-Mind Sculpture")
+    st.title("🎭 Out the Other")
     st.subheader("Interactive Testing Interface for Burning Man 2025")
     
     # Sidebar for configuration
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # API Key input
-        api_key = st.text_input("Anthropic API Key", type="password", help="Enter your Claude API key")
+        # Try to get API key from secrets, fall back to user input
+        api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
         
         if not api_key:
-            st.warning("Please enter your Anthropic API key to begin")
-            st.stop()
+            api_key = st.text_input("Anthropic API Key", type="password", help="Enter your Claude API key")
+            if not api_key:
+                st.warning("Please enter your Anthropic API key to begin")
+                st.stop()
+        else:
+            st.success("✅ API key loaded from secure storage")
         
         # Interaction parameters
         st.subheader("Interaction Settings")
@@ -409,7 +404,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("🏜️ **Heart-Mind Sculpture** - Burning Man 2025 Art Installation")
+    st.markdown("🏜️ **Out the Other** - Burning Man 2025 Art Installation")
     st.markdown("Built with ❤️ for the playa community")
     st.markdown("*Simplified version - no vector database required*")
 
