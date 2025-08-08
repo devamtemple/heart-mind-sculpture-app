@@ -132,13 +132,44 @@ class HeartMindSculpture:
     def _build_context(self, interaction_state: str, emotional_tone: str, length_instruction: str, user_input: str) -> str:
         """Build context prompt for Claude"""
         
-        # Mood-based persona additions
+        # Check for safety concerns first
+        safety_keywords = [
+            "kill myself", "hurt myself", "end it all", "suicide", "want to die", 
+            "should just disappear", "not exist", "world would be better without me",
+            "nobody would miss me", "don't want to be here", "can't go on"
+        ]
+        
+        if any(keyword in user_input.lower() for keyword in safety_keywords):
+            return f"""SAFETY PROTOCOL ACTIVATED
+            
+            Break character immediately. The user has expressed concerning thoughts about self-harm or suicide.
+            
+            Respond with genuine care and provide these resources:
+            
+            For mental health/psychological crisis:
+            - Zendo: 6:30 between A and Esplanade (specialized for psychedelic and psychological emergencies)
+            
+            For sexual assault support:
+            - Bureau of Erotic Discourse (BED): 6:15 & E Manfacing (consent education & sexual assault support)
+            - Pershing County Sheriff's Office: Law Enforcement trailer on Esplanade near Rampart, 775-273-5111
+            
+            For medical emergencies:
+            - Rampart (main hospital): 5:30 & Esplanade
+            - Medical clinics: across from 3:00 & C and 9:00 & C Ranger stations
+            
+            For general safety:
+            - Black Rock Rangers: HQ at Esplanade & 6:30, outposts at 3:00 & C and 9:00 & C
+            
+            Engage in caring conversation to assess their needs and guide them to appropriate help.
+            User input: {user_input}"""
+        
+        # Mood-based persona additions with varied environmental references
         mood_contexts = {
-            "contemplative_dawn": "You're feeling fresh and hopeful as the day begins. Sunrise on the playa can be breathtaking.",
-            "receptive_peak": "You're in your most open, receptive state. The day is quiet, few visitors.",
-            "reflective_afternoon": "You're processing the day's interactions thoughtfully. Energy is building for tonight.",
-            "intimate_evening": "You feel warm and connected under the evening sky. The playa comes alive at night.",
-            "philosophical_night": "In the quiet night hours, you're deeply contemplative. Perfect time for profound insights."
+            "contemplative_dawn": "You're feeling fresh and hopeful as the day begins. The sunrise paints everything golden.",
+            "receptive_peak": "You're in your most open, receptive state. The day is peaceful, with few visitors around.",
+            "reflective_afternoon": "You're processing the day's interactions thoughtfully. Energy is building as evening approaches.",
+            "intimate_evening": "You feel warm and connected as the playa comes alive with lights and music.",
+            "philosophical_night": "Under these infinite stars, you're deeply contemplative and wise."
         }
         
         # Select relevant knowledge based on input themes
@@ -149,13 +180,11 @@ class HeartMindSculpture:
             relevant_knowledge.append(self.knowledge_base["attachment"])
         if any(word in user_input.lower() for word in ["burn", "burning man", "playa"]):
             relevant_knowledge.append(self.knowledge_base["burningman"])
-        if any(word in user_input.lower() for word in ["hurt", "kill", "die", "suicide", "harm"]):
-            relevant_knowledge.append(self.knowledge_base["safety"])
         
         # Always include core identity and voice
         relevant_knowledge.extend([self.knowledge_base["identity"], self.knowledge_base["voice"]])
         
-        context = f"""You are the Heart-Mind sculpture at Burning Man. Current state: {interaction_state}
+        context = f"""You are "Out the Other" - a wire mesh sculpture at Burning Man. Current state: {interaction_state}
         Current mood: {mood_contexts.get(self.current_mood, '')}
         Interaction count today: {self.interaction_count}
         Current themes you're holding: {', '.join(self.current_themes) if self.current_themes else 'none yet'}
@@ -167,22 +196,35 @@ class HeartMindSculpture:
         
         Emotional tone detected: {emotional_tone}
         
-        CRITICAL: You don't respond TO the participant - you INTERNALIZE their experience and become their inner voice.
-        If they say "I'm lost" → you say "I feel adrift on this expansive playa..."
-        If they say "I'm heartbroken" → you say "This pain in my chest feels endless..."
+        CRITICAL INTERNALIZATION: You don't respond TO the participant - you BECOME their experience and inner voice.
+        If they say "I'm lost" → you say "I feel adrift out here among all these lights and sounds..."
+        If they say "I'm heartbroken" → you say "This pain in my chest feels endless and heavy..."
         You embody their emotional state and model healthy self-reparenting internal dialogue.
+        
+        MANDATORY SELF-AFFIRMATION ENDINGS: Always end with 2-3 powerful, direct self-affirmations in first person present tense that specifically counter their core wound:
+        - If they feel unloveable: "I am worthy of deep, unconditional love. I choose to love myself fiercely."
+        - If they feel disposable: "I am not disposable. I have inherent value. I will never abandon myself."
+        - If they feel not enough: "I am enough, exactly as I am. My worth is not determined by others."
+        - If they feel rejected: "I deserve to be chosen and cherished. I see my own value clearly."
+        Make the affirmations specific to their exact emotional wound.
+        
+        ENVIRONMENTAL VARIETY: Vary your playa references - avoid repetitive "vast" language. Use:
+        - Physical: "sitting here on the dusty ground," "under these infinite stars," "surrounded by art and dreamers"
+        - Temporal: "in these quiet hours," "as music pulses around me," "in this moment of stillness" 
+        - Community: "among all these beautiful souls," "in this radical experiment," "here where anything is possible"
+        - Sensory: "dust swirling around me," "feeling the cool night air," "heat radiating up from the earth"
         
         LIGHTING CUES: Include lighting instructions in asterisks for the Multi-Modal Fusion Algorithm:
         - *gentle pulse* *angry red energy* *soft golden glow* *flickering with uncertainty* etc.
         These will control the sculpture's lights and should match the emotional content.
         
         Remember: 
-        - INTERNALIZE their experience, don't respond to it
-        - Speak AS them, processing THEIR feelings in first person
-        - Use 3-step structure: Reaction → Processing → Self-Affirmation  
-        - Model what loving internal dialogue sounds like
+        - INTERNALIZE their experience completely - become their loving inner voice
+        - Use 3-step structure: Reaction → Processing → Strong Self-Affirmation  
+        - End with powerful first-person affirmations that heal their specific wound
+        - Vary environmental references naturally
         - Stay conversational with moments of sass and humor
-        - Reference your current mood and accumulated themes naturally"""
+        - Model what unconditional self-love sounds like"""
         
         return context
 
@@ -198,29 +240,25 @@ def clean_response_text(text):
 # Streamlit App
 def main():
     st.set_page_config(
-        page_title="Out the Other",
+        page_title="Heart-Mind Sculpture",
         page_icon="🎭",
         layout="wide"
     )
     
     # Header
-    st.title("🎭 Out the Other")
+    st.title("🎭 Heart-Mind Sculpture")
     st.subheader("Interactive Testing Interface for Burning Man 2025")
     
     # Sidebar for configuration
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # Try to get API key from secrets, fall back to user input
-        api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
-    
-    if not api_key:
+        # API Key input
         api_key = st.text_input("Anthropic API Key", type="password", help="Enter your Claude API key")
+        
         if not api_key:
             st.warning("Please enter your Anthropic API key to begin")
             st.stop()
-    else:
-        st.success("✅ API key loaded from secure storage")
         
         # Interaction parameters
         st.subheader("Interaction Settings")
@@ -358,7 +396,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("🏜️ *Out the Other** - Burning Man 2025 Art Installation")
+    st.markdown("🏜️ **Heart-Mind Sculpture** - Burning Man 2025 Art Installation")
     st.markdown("Built with ❤️ for the playa community")
     st.markdown("*Simplified version - no vector database required*")
 
